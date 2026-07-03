@@ -293,6 +293,17 @@ body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 
   .cfg-select { padding: 9px 8px; font-size: 0.82rem; }
   .main-grid { gap: 8px; }
 }
+/* ===== WATTAGE MODAL + CHARGE INFO ===== */
+.watt-options { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 12px; }
+.watt-btn { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 16px; border-radius:12px; border:1px solid rgba(0,212,255,0.3); background: rgba(0,212,255,0.06); color:#e0e0ff; font-family:'Tajawal'; cursor:pointer; transition:all 0.2s; }
+.watt-btn:hover { background: rgba(0,212,255,0.14); transform: translateY(-2px); }
+.watt-btn b { font-size:1.3rem; color:#00d4ff; }
+.watt-btn small { color:#8a94a8; font-size:0.74rem; text-align:left; }
+.charge-info { display:none; margin-top:12px; gap:8px; grid-template-columns: repeat(3,1fr); }
+.charge-info.active { display:grid; }
+.ci-item { background: rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:8px 6px; text-align:center; display:flex; flex-direction:column; gap:3px; }
+.ci-item span { color:#667790; font-size:0.66rem; }
+.ci-item b { font-size:0.82rem; color:#e0e0ff; }
 </style>
 </head>
 <body>
@@ -332,6 +343,7 @@ body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 
                     <span id="sliderValue">50%</span>
                 </div>
             </div>
+            <div class="charge-info" id="chargeInfo"></div>
         </div>
 
         <div class="config-column">
@@ -642,6 +654,22 @@ function calculateBatteryHealth(cycles, temp, originalCapacity) {
     </div>
 </div>
 
+<!-- ===== WATTAGE MODAL ===== -->
+<div class="mtc-overlay" id="wattageModal">
+    <div class="mtc-modal">
+        <div class="mtc-modal-head">
+            <h3>⚡ الشاحن كام وات؟</h3>
+            <button class="mtc-modal-close" onclick="closeWattage()">✕</button>
+        </div>
+        <div id="wattageTypeNote" class="assumption-note"></div>
+        <div class="watt-options">
+            <button class="watt-btn" onclick="confirmWattage(20)"><b>20W</b><small id="w20sub"></small></button>
+            <button class="watt-btn" onclick="confirmWattage(30)"><b>30W</b><small id="w30sub"></small></button>
+            <button class="watt-btn" onclick="confirmWattage(45)"><b>45W</b><small id="w45sub"></small></button>
+        </div>
+    </div>
+</div>
+
 <!-- ===== FEEDBACK MODAL ===== -->
 <div class="mtc-overlay" id="feedbackModal">
     <div class="mtc-modal">
@@ -730,7 +758,8 @@ let state = {
     isOvercharging: false, overchargeStartTime: null, totalOverchargeMinutes: 0, overchargeDamage: 0,
     isDischarging: false, dischargeStart: 0,
     chargeInterval: null, dischargeInterval: null, overchargeInterval: null,
-    temperature: 25, cycleDamage: 0, chargerTypeDamage: 0, cycleTarget: 500, events: []
+    temperature: 25, cycleDamage: 0, chargerTypeDamage: 0, cycleTarget: 500,
+    chargeWatts: 0, effWatts: 0, speedLvl: 0, chargePeak: 25, coolInterval: null, events: []
 };
 
 const CYCLES_PER_PERCENT = 32;
@@ -740,6 +769,33 @@ const CHARGER_MULTIPLIERS = {
     brand: { mult: 1.2, name: 'براند', sub: 'جيد' },
     generic: { mult: 2.5, name: 'تجاري', sub: 'ضار' }
 };
+
+// ===== نظام واتّية الشاحن =====
+// الوات الحقيقي للشاحن التجاري (مكتوب ← الفعلي) — الكتابة مبالغ فيها وبدون حماية
+const GENERIC_REAL = { 20: 10, 30: 15, 45: 18 };
+// نسبة الوات الفعلي من المكتوب حسب النوع (الأصلي كامل، البراند مقارب)
+const TYPE_REAL_FACTOR = { original: 1.0, brand: 0.9, generic: null };
+// معامل الحرارة حسب النوع (التجاري يرفع الحرارة كثيرًا وبدون حماية)
+const TYPE_HEAT_FACTOR = { original: 1.0, brand: 1.15, generic: 1.8 };
+// حرارة إضافية حسب الوات المكتوب (كل ما زاد الوات زادت الحرارة)
+const WATT_HEAT = { 20: 6, 30: 11, 45: 17 };
+// زمن الشحن لكل 1% (ملي ثانية) حسب مستوى السرعة — أقل = أسرع
+const SPEED_MS = { 1: 90, 2: 65, 3: 45, 4: 30, 5: 20 };
+
+function effectiveWatts(type, labeled) {
+    if (type === 'generic') return GENERIC_REAL[labeled];
+    return Math.round(labeled * TYPE_REAL_FACTOR[type]);
+}
+function speedLevel(watts) {
+    if (watts <= 10) return 1;
+    if (watts <= 15) return 2;
+    if (watts <= 22) return 3;   // 20W أصلي ← المستوى الثالث
+    if (watts <= 32) return 4;
+    return 5;
+}
+function peakTemp(type, labeled) {
+    return Math.round(25 + WATT_HEAT[labeled] * TYPE_HEAT_FACTOR[type]);
+}
 
 const batteryFill = document.getElementById('batteryFill');
 const batteryPercent = document.getElementById('batteryPercent');
@@ -773,26 +829,93 @@ function setBrandName(name) {
     logEvent('info', 'براند', 'تم اختيار براند: ' + name);
 }
 
+// الضغط على "وصل الشاحن" يفتح سؤال الوات أولاً
 function startCharge() {
+    if (state.isPlugged) return;
+    openWattage();
+}
+
+function openWattage() {
+    var t = state.chargerType;
+    var tn = CHARGER_MULTIPLIERS[t].name;
+    var note = '🔌 نوع الشاحن الحالي: <b>' + tn + '</b>';
+    if (t === 'generic') note += ' — ⚠️ الشاحن التجاري غالبًا واته الفعلي أقل من المكتوب، يرفع الحرارة، وبدون حماية.';
+    document.getElementById('wattageTypeNote').innerHTML = note;
+    [20, 30, 45].forEach(function(w){
+        var ew = effectiveWatts(t, w);
+        var lvl = speedLevel(ew);
+        var tp = peakTemp(t, w);
+        var sub = 'فعلي ~' + ew + 'W · سرعة ' + lvl + '/5 · حرارة ~' + tp + '°';
+        if (t === 'generic' && (w === 30 || w === 45)) sub = '⚠️ نادر في التجاري · ' + sub;
+        document.getElementById('w' + w + 'sub').textContent = sub;
+    });
+    document.getElementById('wattageModal').classList.add('active');
+}
+function closeWattage() { document.getElementById('wattageModal').classList.remove('active'); }
+function confirmWattage(w) { closeWattage(); beginCharging(w); }
+
+function beginCharging(labeledWatts) {
     if (state.isDischarging) stopDischarge();
     if (state.isPlugged) return;
+    clearInterval(state.coolInterval); state.coolInterval = null;
     state.isPlugged = true;
     state.plugCount++;
     state.currentPlugStart = state.charge;
+    var t = state.chargerType;
+    var ew = effectiveWatts(t, labeledWatts);
+    state.chargeWatts = labeledWatts;
+    state.effWatts = ew;
+    state.speedLvl = speedLevel(ew);
+    state.chargePeak = peakTemp(t, labeledWatts);
     btnCharge.disabled = true;
     btnStop.disabled = false;
     btnDischarge.disabled = true;
-    logEvent('plug', 'توصيل الشاحن', 'تم توصيل الشاحن عند ' + state.charge + '% | نوع: ' + CHARGER_MULTIPLIERS[state.chargerType].name);
+    var realNote = (t === 'generic')
+        ? (' | ⚠️ مكتوب ' + labeledWatts + 'W والفعلي ~' + ew + 'W (بدون حماية)')
+        : (' | الفعلي ~' + ew + 'W');
+    logEvent('plug', 'توصيل الشاحن', 'عند ' + state.charge + '% | ' + CHARGER_MULTIPLIERS[t].name + ' ' + labeledWatts + 'W' + realNote + ' | سرعة ' + state.speedLvl + '/5 | حرارة الهدف ~' + state.chargePeak + '°');
     state.chargeInterval = setInterval(() => {
+        state.temperature += (state.chargePeak - state.temperature) * 0.08;   // ارتفاع الحرارة تدريجيًا نحو الذروة
         if (state.charge < 100) {
             state.charge++;
             chargeSlider.value = state.charge;
             updateBatteryVisual();
-        } else {
+            updateChargeInfo();
+        } else if (!state.isOvercharging) {
             startOvercharge();
+        } else {
+            updateChargeInfo();
         }
-    }, getChargeSpeed());
+    }, SPEED_MS[state.speedLvl]);
+    updateChargeInfo();
     updateUI();
+}
+
+function updateChargeInfo() {
+    var el = document.getElementById('chargeInfo');
+    if (!el) return;
+    if (!state.isPlugged) { el.classList.remove('active'); el.innerHTML = ''; return; }
+    var temp = Math.round(state.temperature);
+    var lvl = state.speedLvl || 1;
+    var bars = '▮'.repeat(lvl) + '▯'.repeat(5 - lvl);
+    var tempColor = temp >= 45 ? '#ff2d75' : (temp >= 38 ? '#ffaa00' : '#00e676');
+    el.classList.add('active');
+    el.innerHTML =
+        '<div class="ci-item"><span>⚡ السرعة</span><b>' + bars + '</b></div>' +
+        '<div class="ci-item"><span>🔌 الوات الفعلي</span><b>' + (state.effWatts || 0) + 'W</b></div>' +
+        '<div class="ci-item"><span>🌡️ الحرارة</span><b style="color:' + tempColor + '">' + temp + '°C</b></div>';
+}
+
+function startCooldown() {
+    clearInterval(state.coolInterval);
+    state.coolInterval = setInterval(function(){
+        state.temperature += (25 - state.temperature) * 0.1;
+        if (Math.abs(state.temperature - 25) < 0.5) {
+            state.temperature = 25;
+            clearInterval(state.coolInterval);
+            state.coolInterval = null;
+        }
+    }, 200);
 }
 
 function stopCharge() {
@@ -817,6 +940,7 @@ function stopCharge() {
     } else {
         logEvent('unplug', 'فصل الشاحن', 'تم فصل الشاحن بدون شحن');
     }
+    startCooldown();
     recalculateHealth();
     updateUI();
 }
@@ -1097,6 +1221,7 @@ function updateUI() {
     updateBatteryVisual();
     updateStats();
     updateSummary();
+    updateChargeInfo();
 }
 
 function updateBatteryVisual() {
@@ -1202,6 +1327,7 @@ function resetAll() {
     clearInterval(state.chargeInterval);
     clearInterval(state.dischargeInterval);
     clearInterval(state.overchargeInterval);
+    clearInterval(state.coolInterval);
     state = {
         charge: 50, designCapacity: 3000, currentCapacity: 3000, health: 100,
         totalChargeAmount: 0, totalDischargeAmount: 0, chargeCycles: 0,
@@ -1210,7 +1336,8 @@ function resetAll() {
         isOvercharging: false, overchargeStartTime: null, totalOverchargeMinutes: 0, overchargeDamage: 0,
         isDischarging: false, dischargeStart: 0,
         chargeInterval: null, dischargeInterval: null, overchargeInterval: null,
-        temperature: 25, cycleDamage: 0, chargerTypeDamage: 0, cycleTarget: state.cycleTarget, events: []
+        temperature: 25, cycleDamage: 0, chargerTypeDamage: 0, cycleTarget: state.cycleTarget,
+        chargeWatts: 0, effWatts: 0, speedLvl: 0, chargePeak: 25, coolInterval: null, events: []
     };
     btnCharge.disabled = false;
     btnStop.disabled = true;
