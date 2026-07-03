@@ -210,6 +210,68 @@ body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 
 .privacy-body { color: #a8b2c8; font-size: 0.88rem; line-height: 1.9; }
 .privacy-body h4 { color: #00d4ff; font-size: 0.95rem; margin: 14px 0 4px; }
 .privacy-body p { margin-bottom: 6px; }
+
+/* ===== MODEL TOGGLE ===== */
+.model-toggle { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; background: #0a0a12; border: 1px solid rgba(255,215,0,0.12); border-radius: 14px; padding: 12px 15px; margin-bottom: 15px; }
+.model-toggle-label { color: #00d4ff; font-weight: 700; font-size: 0.9rem; }
+.model-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.03); color: #a8b2c8; font-family: 'Tajawal'; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; }
+.model-btn small { font-size: 0.68rem; font-weight: 400; color: #667790; }
+.model-btn:hover { transform: translateY(-1px); }
+.model-btn.active { background: rgba(0,212,255,0.12); border-color: #00d4ff; color: #00d4ff; }
+.model-btn.active small { color: #00d4ff; }
+
+/* ===== MODEL SELECT ===== */
+.model-select { flex: 1; min-width: 200px; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(0,212,255,0.3); background: #0d0d1a; color: #e0e0ff; font-family: 'Tajawal'; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
+.model-select:focus { outline: none; border-color: #00d4ff; }
+.model-select optgroup { color: #FFD700; background: #0d0d1a; }
+.model-select option { color: #e0e0ff; background: #12122a; font-weight: 400; }
+.model-target-badge { background: rgba(0,212,255,0.12); color: #00d4ff; border: 1px solid rgba(0,212,255,0.3); border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; white-space: nowrap; }
+/* ===== FEATURE SECTION ===== */
+.feature-section { background: #0a0a12; border: 1px solid rgba(255,215,0,0.12); border-radius: 16px; padding: 20px; margin-bottom: 15px; }
+.feature-section h3 { color: #00d4ff; font-size: 1.15rem; margin-bottom: 6px; }
+.feature-section .sub { color: #667790; font-size: 0.82rem; margin-bottom: 14px; line-height: 1.6; }
+/* ===== REFERENCE TABLE ===== */
+.ref-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.ref-table th, .ref-table td { padding: 9px 6px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.ref-table th { color: #00d4ff; font-weight: 700; font-size: 0.78rem; }
+.ref-table td:first-child { color: #a8b2c8; text-align: right; }
+.ref-table .h-good { color: #00e676; font-weight: 700; }
+.ref-table .h-ok { color: #ffaa00; font-weight: 700; }
+.ref-table .h-bad { color: #ff2d75; font-weight: 700; }
+/* ===== USAGE FORM ===== */
+.usage-form .fb-field { margin-bottom: 12px; }
+.usage-form label { display:block; color:#00d4ff; font-size:0.85rem; font-weight:700; margin-bottom:5px; }
+.usage-form input, .usage-form select { width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.35); color:#e0e0ff; font-family:'Tajawal'; font-size:0.9rem; }
+.usage-form input:focus, .usage-form select:focus { outline:none; border-color:#00d4ff; }
+.usage-form select optgroup { color:#FFD700; }
+.usage-form select option { background:#12122a; color:#e0e0ff; }
+.field-note { color:#8a94a8; font-size:0.72rem; margin-top:5px; line-height:1.6; }
+.btn-evaluate { width:100%; padding:13px; margin-top:6px; border:none; border-radius:12px; background: linear-gradient(135deg,#00d4ff,#7b2ff7); color:#fff; font-family:'Tajawal'; font-size:1rem; font-weight:900; cursor:pointer; transition:all 0.2s; }
+.btn-evaluate:hover { transform: translateY(-2px); box-shadow:0 8px 20px rgba(0,212,255,0.3); }
+.usage-result { display:none; margin-top:16px; background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:16px; }
+.ur-head { font-size:1.1rem; font-weight:900; margin-bottom:12px; text-align:center; }
+.ur-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+.ur-grid > div { background: rgba(0,0,0,0.3); border-radius:10px; padding:9px 10px; display:flex; flex-direction:column; gap:2px; }
+.ur-grid span { color:#667790; font-size:0.72rem; }
+.ur-grid b { color:#e0e0ff; font-size:1rem; }
+.ur-note { color:#a8b2c8; font-size:0.85rem; text-align:center; padding:8px; background:rgba(0,212,255,0.06); border-radius:8px; margin-bottom:8px; line-height:1.6; }
+.ur-tip { color:#ffd700; font-size:0.82rem; text-align:center; line-height:1.6; }
+@media (max-width:460px){ .ur-grid { grid-template-columns:1fr; } }
+.assumption-note { background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.25); border-radius: 10px; padding: 11px 13px; margin-bottom: 15px; color: #ffe08a; font-size: 0.82rem; line-height: 1.7; font-weight: 500; }
+/* ===== CAUSES & SOLUTIONS ===== */
+.btn-causes { width:100%; margin-top:12px; padding:11px; border:1px solid rgba(255,45,117,0.4); border-radius:12px; background:rgba(255,45,117,0.1); color:#ff6b9d; font-family:'Tajawal'; font-size:0.95rem; font-weight:800; cursor:pointer; transition:all 0.2s; }
+.btn-causes:hover { background:rgba(255,45,117,0.18); transform: translateY(-1px); }
+.causes-panel { display:none; margin-top:12px; }
+.causes-panel.active { display:block; animation: modalIn 0.25s ease; }
+.cs-block { border-radius:12px; padding:14px; margin-bottom:10px; }
+.cs-causes { background:rgba(255,45,117,0.06); border:1px solid rgba(255,45,117,0.2); }
+.cs-solutions { background:rgba(0,230,118,0.06); border:1px solid rgba(0,230,118,0.2); }
+.cs-block h4 { font-size:0.95rem; margin-bottom:10px; }
+.cs-causes h4 { color:#ff6b9d; }
+.cs-solutions h4 { color:#00e676; }
+.cs-block ul { list-style:none; padding:0; margin:0; }
+.cs-block li { color:#c8d0e0; font-size:0.83rem; line-height:1.7; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+.cs-block li:last-child { border-bottom:none; }
 </style>
 </head>
 <body>
@@ -229,6 +291,12 @@ body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 
     <div class="header">
         <h1>🔋 محاكاة لصحة بطارية الايفون</h1>
         <p>جرب سيناريوهات مختلفة وشوف تأثيرها على عمر البطارية</p>
+    </div>
+
+    <div class="model-toggle">
+        <span class="model-toggle-label">📱 موديل الجهاز:</span>
+        <select id="modelSelect" class="model-select" onchange="setModel(this.value)"></select>
+        <span class="model-target-badge" id="modelTargetBadge">500 دورة ← 80%</span>
     </div>
 
     <div class="main-grid">
@@ -304,7 +372,7 @@ body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 
     <div class="stats-section">
         <div class="stats-grid">
             <div class="stat-card"><div class="stat-value" id="statHealth">100%</div><div class="stat-label">صحة البطارية</div><div class="stat-sub" id="statHealthSub">ممتازة</div></div>
-            <div class="stat-card"><div class="stat-value" id="statCapacity">3000</div><div class="stat-label">السعة الحالية (mAh)</div><div class="stat-sub">من 3000 أصلية</div></div>
+            <div class="stat-card"><div class="stat-value" id="statCapacity">3000</div><div class="stat-label">السعة الحالية (mAh)</div><div class="stat-sub" id="statDesignSub">من 3000 أصلية</div></div>
             <div class="stat-card"><div class="stat-value" id="statCycles">0</div><div class="stat-label">دورات الشحن</div><div class="stat-sub" id="statCyclesSub">0% مجموع</div></div>
             <div class="stat-card"><div class="stat-value" id="statPlugs">0</div><div class="stat-label">مرات التوصيل</div><div class="stat-sub" id="statPlugsSub">Plug Count</div></div>
             <div class="stat-card"><div class="stat-value" id="statOvercharge">0</div><div class="stat-label">ساعات التعلق</div><div class="stat-sub" id="statOverchargeSub">على 100%</div></div>
@@ -325,6 +393,35 @@ body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 
             <div>تلف من الشاحن: <span id="sumChargerDamage">0%</span></div>
             <div>تلف من التعلق: <span id="sumOverchargeDamage">0%</span></div>
         </div>
+    </div>
+
+    <!-- ===== جدول استرشادي ===== -->
+    <div class="feature-section">
+        <h3>📊 جدول استرشادي لتلف البطارية</h3>
+        <div class="sub">بافتراض أن المستخدم ينفّذ دورة شحن كاملة واحدة يوميًا (توصيلة واحدة). أرقام تقديرية مبنية على سبيك Apple الرسمي (80% عند 500 دورة لـ iPhone 14 والأقدم، و1000 دورة لـ iPhone 15 والأحدث).</div>
+        <div id="refTableBox"></div>
+    </div>
+
+    <!-- ===== قدّر استخدامك ===== -->
+    <div class="feature-section usage-form">
+        <h3>🧮 قدّر استخدامك</h3>
+        <div class="sub">اعرف إذا كان استخدامك للبطارية أفضل أم أسوأ من المتوقع، مقارنةً بعدد دورات الشحن.</div>
+        <div class="assumption-note">📌 إذا اعتبرنا أن المستخدم ينفّذ دورة شحن كاملة كل يوم بتوصيل الشاحن مرة واحدة، فإن عدد دورات الشحن ≈ عدد أيام الاستخدام.</div>
+        <div class="fb-field">
+            <label>📱 الموديل</label>
+            <select id="formModel"></select>
+        </div>
+        <div class="fb-field">
+            <label>🔋 البطارية الحالية (%)</label>
+            <input type="number" id="formHealth" min="1" max="100" placeholder="مثال: 92">
+        </div>
+        <div class="fb-field">
+            <label>🔁 عدد مرات الشحن (دورات الشحن)</label>
+            <input type="number" id="formCycles" min="1" placeholder="مثال: 250">
+            <div class="field-note">💡 في الأجهزة حتى فئة iPhone 14 يمكنك معرفة عدد دورات الشحن باستخدام برنامج 3uTools. أما iPhone 15 والأحدث فتجدها في: الإعدادات ← البطارية ← صحة البطارية.</div>
+        </div>
+        <button class="btn-evaluate" onclick="evaluateUsage()">📈 قيّم استخدامي</button>
+        <div class="usage-result" id="usageResult"></div>
     </div>
 
     <!-- ===== ALL 7 TABS ===== -->
@@ -623,7 +720,7 @@ let state = {
     isOvercharging: false, overchargeStartTime: null, totalOverchargeMinutes: 0, overchargeDamage: 0,
     isDischarging: false, dischargeStart: 0,
     chargeInterval: null, dischargeInterval: null, overchargeInterval: null,
-    temperature: 25, cycleDamage: 0, chargerTypeDamage: 0, events: []
+    temperature: 25, cycleDamage: 0, chargerTypeDamage: 0, cycleTarget: 500, events: []
 };
 
 const CYCLES_PER_PERCENT = 32;
@@ -700,13 +797,13 @@ function stopCharge() {
     btnDischarge.disabled = false;
     if (chargeAmount > 0) {
         state.totalChargeAmount += chargeAmount;
+        const prevCycles = state.chargeCycles;
         const newCycles = state.totalChargeAmount / 100;
-        const cyclesAdded = newCycles - state.chargeCycles;
+        const cyclesAdded = newCycles - prevCycles;
         state.chargeCycles = newCycles;
-        const baseDamage = chargeAmount / 100 / CYCLES_PER_PERCENT * 100;
-        const actualDamage = baseDamage * state.chargerMultiplier;
-        state.cycleDamage += actualDamage;
-        logEvent('charge', 'شحن جزئي', 'من ' + state.currentPlugStart + '% إلى ' + state.charge + '% (+' + chargeAmount + '%) | دورات: +' + cyclesAdded.toFixed(3) + ' | تلف: +' + actualDamage.toFixed(3) + '% (×' + state.chargerMultiplier + ')');
+        // التلف الفعلي = فرق المنحنى بين الدورات الجديدة والقديمة (شبه صفر في البداية)
+        const actualDamage = (cycleDamagePct(newCycles) - cycleDamagePct(prevCycles)) * state.chargerMultiplier;
+        logEvent('charge', 'شحن جزئي', 'من ' + state.currentPlugStart + '% إلى ' + state.charge + '% (+' + chargeAmount + '%) | دورات: +' + cyclesAdded.toFixed(3) + ' | تلف: +' + actualDamage.toFixed(4) + '% (×' + state.chargerMultiplier + ')');
     } else {
         logEvent('unplug', 'فصل الشاحن', 'تم فصل الشاحن بدون شحن');
     }
@@ -781,8 +878,198 @@ function stopDischarge() {
     updateUI();
 }
 
+// نموذج واقعي لتلف بطارية الآيفون — مبني على سبيك Apple الرسمي:
+// iPhone 14 والأقدم: ~80% صحة عند 500 دورة كاملة. التلف غير خطي:
+// أول عشرات الدورات تأثيرها شبه معدوم، ثم يزيد تدريجيًا (منحنى قوة أُس 1.4).
+// عدد مرات التوصيل (Plug Count) لا يخصم أي تلف — التلف من الدورات (throughput) فقط.
+// قاعدة بيانات موديلات الآيفون (سعة التصميم mAh + هدف الدورات حسب سبيك Apple)
+// iPhone 14 والأقدم: 80% عند 500 دورة | iPhone 15 والأحدث: 80% عند 1000 دورة
+const IPHONE_MODELS = [
+    { key:'x',        name:'iPhone X',            mah:2716, target:500 },
+    { key:'xr',       name:'iPhone XR',           mah:2942, target:500 },
+    { key:'xs',       name:'iPhone XS',           mah:2658, target:500 },
+    { key:'xsmax',    name:'iPhone XS Max',       mah:3174, target:500 },
+    { key:'11',       name:'iPhone 11',           mah:3110, target:500 },
+    { key:'11pro',    name:'iPhone 11 Pro',       mah:3046, target:500 },
+    { key:'11promax', name:'iPhone 11 Pro Max',   mah:3969, target:500 },
+    { key:'12mini',   name:'iPhone 12 mini',      mah:2227, target:500 },
+    { key:'12',       name:'iPhone 12',           mah:2815, target:500 },
+    { key:'12pro',    name:'iPhone 12 Pro',       mah:2815, target:500 },
+    { key:'12promax', name:'iPhone 12 Pro Max',   mah:3687, target:500 },
+    { key:'13mini',   name:'iPhone 13 mini',      mah:2406, target:500 },
+    { key:'13',       name:'iPhone 13',           mah:3227, target:500 },
+    { key:'13pro',    name:'iPhone 13 Pro',       mah:3095, target:500 },
+    { key:'13promax', name:'iPhone 13 Pro Max',   mah:4352, target:500 },
+    { key:'14',       name:'iPhone 14',           mah:3279, target:500 },
+    { key:'14plus',   name:'iPhone 14 Plus',      mah:4325, target:500 },
+    { key:'14pro',    name:'iPhone 14 Pro',       mah:3200, target:500 },
+    { key:'14promax', name:'iPhone 14 Pro Max',   mah:4323, target:500 },
+    { key:'15',       name:'iPhone 15',           mah:3349, target:1000 },
+    { key:'15plus',   name:'iPhone 15 Plus',      mah:4383, target:1000 },
+    { key:'15pro',    name:'iPhone 15 Pro',       mah:3274, target:1000 },
+    { key:'15promax', name:'iPhone 15 Pro Max',   mah:4422, target:1000 },
+    { key:'16',       name:'iPhone 16',           mah:3561, target:1000 },
+    { key:'16plus',   name:'iPhone 16 Plus',      mah:4674, target:1000 },
+    { key:'16pro',    name:'iPhone 16 Pro',       mah:3582, target:1000 },
+    { key:'16promax', name:'iPhone 16 Pro Max',   mah:4685, target:1000 },
+    { key:'17',       name:'iPhone 17',           mah:3692, target:1000 },
+    { key:'17air',    name:'iPhone Air',          mah:3149, target:1000 },
+    { key:'17pro',    name:'iPhone 17 Pro',       mah:4252, target:1000 },
+    { key:'17promax', name:'iPhone 17 Pro Max',   mah:5088, target:1000 }
+];
+
+// نموذج التلف الواقعي — منحنى قوة (أُس 1.4) يضمن ~20% تلف عند عدد الدورات المستهدف.
+// عدد مرات التوصيل (Plug Count) لا يخصم تلف — التلف من إجمالي الدورات فقط.
+function cycleDamagePct(cycles, target) {
+    if (cycles <= 0) return 0;
+    target = target || state.cycleTarget || 500;
+    const A = 20 / Math.pow(target, 1.4);
+    return A * Math.pow(cycles, 1.4);
+}
+
+function setModel(key) {
+    const m = IPHONE_MODELS.find(x => x.key === key);
+    if (!m) return;
+    state.cycleTarget = m.target;
+    state.designCapacity = m.mah;
+    document.getElementById('modelTargetBadge').textContent = m.target + ' دورة ← 80%';
+    const sub = document.getElementById('statDesignSub');
+    if (sub) sub.textContent = 'من ' + m.mah + ' أصلية';
+    logEvent('info', 'اختيار الموديل', m.name + ' — ' + m.mah + ' mAh — 80% عند ' + m.target + ' دورة');
+    recalculateHealth();
+    updateUI();
+}
+
+function populateModelSelects() {
+    const g500 = IPHONE_MODELS.filter(m => m.target === 500);
+    const g1000 = IPHONE_MODELS.filter(m => m.target === 1000);
+    ['modelSelect','formModel'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        sel.innerHTML = '<option value="">📱 اختر الموديل</option>';
+        [['iPhone X – 14  (80% عند 500 دورة)', g500], ['iPhone 15 وأحدث  (80% عند 1000 دورة)', g1000]].forEach(([label, arr]) => {
+            const og = document.createElement('optgroup');
+            og.label = label;
+            arr.forEach(m => {
+                const o = document.createElement('option');
+                o.value = m.key;
+                o.textContent = m.name + ' — ' + m.mah + ' mAh';
+                og.appendChild(o);
+            });
+            sel.appendChild(og);
+        });
+    });
+}
+
+function healthCls(hh) { return hh >= 90 ? 'h-good' : hh >= 80 ? 'h-ok' : 'h-bad'; }
+
+function buildReferenceTable() {
+    const rows = [['شهر',30],['3 شهور',90],['6 شهور',180],['سنة',365],['سنة ونص',548],['سنتين',730],['سنتين ونص',913],['3 سنين',1095],['4 سنين',1460]];
+    let html = '<table class="ref-table"><thead><tr><th>المدة (دورة/يوم)</th><th>الدورات</th><th>iPhone X–14</th><th>iPhone 15 وأحدث</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+        const label = r[0], cyc = r[1];
+        const h5 = Math.max(0, 100 - cycleDamagePct(cyc, 500));
+        const h10 = Math.max(0, 100 - cycleDamagePct(cyc, 1000));
+        html += '<tr><td>'+label+'</td><td>'+cyc+'</td><td class="'+healthCls(h5)+'">'+h5.toFixed(1)+'%</td><td class="'+healthCls(h10)+'">'+h10.toFixed(1)+'%</td></tr>';
+    });
+    html += '</tbody></table>';
+    const box = document.getElementById('refTableBox');
+    if (box) box.innerHTML = html;
+}
+
+function urMsg(t) { return '<div class="ur-head" style="color:#ffaa00">⚠️ ' + t + '</div>'; }
+
+function usageTip(diff) {
+    if (diff >= 1) return '👌 استمر على عاداتك: شاحن أصلي، وتجنّب الحرارة والشحن الليلي المستمر على 100%.';
+    if (diff > -1.5) return '⚖️ استخدامك متوازن. حافظ على الشحن بين 20–80% لإطالة عمر البطارية.';
+    return '🛠️ قلّل الحرارة، استخدم شاحن أصلي، فعّل "الشحن المُحسّن"، وتجنّب ترك الجهاز على 100% لفترات طويلة.';
+}
+
+function causesSolutionsHtml() {
+    var causes = [
+        '🌡️ الحرارة العالية (أكثر من 35°م): الشحن تحت الشمس أو في مكان حار أو أثناء الألعاب الثقيلة — أكبر سبب للتلف.',
+        '🔌 استخدام شواحن تجارية رخيصة أو تقليد بجهد غير مستقر.',
+        '⚡ الإفراط في الشحن السريع الذي يرفع حرارة البطارية.',
+        '🔋 ترك الجهاز موصولاً على 100% لفترات طويلة (الشحن الليلي المستمر).',
+        '📉 التفريغ العميق المتكرر حتى 0%.',
+        '📡 كثرة الشحن اللاسلكي (يولّد حرارة أعلى من الشحن السلكي).',
+        '🎮 تشغيل ألعاب أو تطبيقات ثقيلة والجهاز يشحن في نفس الوقت.'
+    ];
+    var solutions = [
+        '✅ استخدم شاحن أصلي أو براند معتمد (Anker / Belkin / UGREEN).',
+        '⚙️ فعّل "الشحن المُحسّن": الإعدادات ← البطارية ← صحة البطارية.',
+        '🔒 في iPhone 15 وأحدث فعّل حد الشحن عند 80%.',
+        '📊 حافظ على نسبة الشحن بين 20% و80% قدر الإمكان.',
+        '❄️ تجنّب الحرارة: لا تترك الجهاز في الشمس أو السيارة، واخلع الجراب إن سخن أثناء الشحن.',
+        '⏏️ افصل الشاحن عند 80–90% وتجنّب التعلق على 100% طوال الليل.',
+        '🔻 قلّل الاعتماد على الشحن اللاسلكي المتكرر.',
+        '🆕 حدّث نظام iOS باستمرار للاستفادة من تحسينات إدارة الطاقة.'
+    ];
+    var li = function(arr){ return arr.map(function(x){ return '<li>' + x + '</li>'; }).join(''); };
+    return '<button class="btn-causes" onclick="toggleCausesSolutions()">🔎 أسباب وحلول</button>' +
+        '<div class="causes-panel" id="causesPanel">' +
+            '<div class="cs-block cs-causes"><h4>⚠️ الأسباب التي تؤدي إلى التلف السريع</h4><ul>' + li(causes) + '</ul></div>' +
+            '<div class="cs-block cs-solutions"><h4>✅ الحلول</h4><ul>' + li(solutions) + '</ul></div>' +
+        '</div>';
+}
+
+function toggleCausesSolutions() {
+    var p = document.getElementById('causesPanel');
+    if (p) p.classList.toggle('active');
+}
+
+function evaluateUsage() {
+    const out = document.getElementById('usageResult');
+    const m = IPHONE_MODELS.find(x => x.key === document.getElementById('formModel').value);
+    const health = parseFloat(document.getElementById('formHealth').value);
+    const cycles = parseFloat(document.getElementById('formCycles').value);
+    out.style.display = 'block';
+    if (!m) { out.innerHTML = urMsg('اختر موديل الجهاز أولاً'); return; }
+    if (isNaN(health) || health <= 0 || health > 100) { out.innerHTML = urMsg('اكتب نسبة صحة صحيحة بين 1 و 100'); return; }
+    if (isNaN(cycles) || cycles <= 0) { out.innerHTML = urMsg('اكتب عدد مرات الشحن (الدورات)'); return; }
+
+    const expected = Math.max(0, 100 - cycleDamagePct(cycles, m.target));
+    const diff = health - expected;
+    const actualRate = (100 - health) / cycles;
+    const idealRate = 20 / m.target;
+    const ratio = idealRate > 0 ? (actualRate / idealRate) : 0;
+
+    let note = '';
+    if (health <= 80) {
+        note = 'البطارية وصلت بالفعل حد 80% — يُنصح بتغييرها.';
+    } else if (actualRate > 0) {
+        const cyclesTo80 = 20 / actualRate;
+        const remaining = Math.max(0, cyclesTo80 - cycles);
+        const months = Math.round(remaining / 30);
+        note = 'بمعدلك الحالي: متبقٍّ تقريبًا <b>' + Math.round(remaining) + '</b> دورة للوصول إلى 80% (~' + months + ' شهر بافتراض دورة/يوم).';
+    } else {
+        note = 'بطاريتك ما زالت 100% — ممتاز!';
+    }
+
+    let verdict, color, emoji;
+    if (diff >= 3) { verdict = 'ممتاز — أعلى من المتوقع'; color = '#00e676'; emoji = '🌟'; }
+    else if (diff >= 1) { verdict = 'أفضل من المتوسط'; color = '#00d4ff'; emoji = '✅'; }
+    else if (diff > -1.5) { verdict = 'طبيعي — مطابق للمتوقع'; color = '#7b8cff'; emoji = '👍'; }
+    else if (diff > -4) { verdict = 'أقل من المتوقع — تلف أسرع قليلاً'; color = '#ffaa00'; emoji = '⚠️'; }
+    else { verdict = 'استخدام قاسٍ — تلف أسرع من الطبيعي'; color = '#ff2d75'; emoji = '🔴'; }
+
+    out.innerHTML =
+        '<div class="ur-head" style="color:' + color + '">' + emoji + ' ' + verdict + '</div>' +
+        '<div class="ur-grid">' +
+        '<div><span>صحتك الحالية</span><b>' + health + '%</b></div>' +
+        '<div><span>المتوقع عند ' + cycles + ' دورة</span><b>' + expected.toFixed(1) + '%</b></div>' +
+        '<div><span>الفرق</span><b style="color:' + color + '">' + (diff >= 0 ? '+' : '') + diff.toFixed(1) + '%</b></div>' +
+        '<div><span>معدل تلفك الفعلي</span><b>' + actualRate.toFixed(3) + '%/دورة</b></div>' +
+        '<div><span>المعدل المثالي</span><b>' + idealRate.toFixed(3) + '%/دورة</b></div>' +
+        '<div><span>نسبتك للمثالي</span><b>' + ratio.toFixed(2) + '×</b></div>' +
+        '</div>' +
+        '<div class="ur-note">' + note + '</div>' +
+        '<div class="ur-tip">' + usageTip(diff) + '</div>' +
+        (diff <= -1.5 ? causesSolutionsHtml() : '');
+}
+
 function recalculateHealth() {
-    const cycleDamage = (state.chargeCycles / CYCLES_PER_PERCENT) * state.chargerMultiplier;
+    const cycleDamage = cycleDamagePct(state.chargeCycles) * state.chargerMultiplier;
     const overchargeDamage = state.overchargeDamage;
     const totalDamage = cycleDamage + overchargeDamage;
     state.health = Math.max(0, 100 - totalDamage);
@@ -913,7 +1200,7 @@ function resetAll() {
         isOvercharging: false, overchargeStartTime: null, totalOverchargeMinutes: 0, overchargeDamage: 0,
         isDischarging: false, dischargeStart: 0,
         chargeInterval: null, dischargeInterval: null, overchargeInterval: null,
-        temperature: 25, cycleDamage: 0, chargerTypeDamage: 0, events: []
+        temperature: 25, cycleDamage: 0, chargerTypeDamage: 0, cycleTarget: state.cycleTarget, events: []
     };
     btnCharge.disabled = false;
     btnStop.disabled = true;
@@ -959,6 +1246,10 @@ function sendFeedback(){
     window.open(url, '_blank');
     closeFeedback();
 }
+
+// تهيئة قوائم الموديلات والجدول الاسترشادي عند التحميل
+populateModelSelects();
+buildReferenceTable();
 </script>
 </body>
 </html>
