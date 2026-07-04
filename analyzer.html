@@ -264,6 +264,27 @@ const MODELS=[
 ];
 // موديلات آيفون 15 وأحدث حدها التصميمي 1000 دورة
 function cycleSpecFor(model){ return /iPhone 1[5-9]|iPhone 2\d|iPhone Air/.test(model||"")?1000:500; }
+const MODELS_MAP = Object.fromEntries(MODELS);
+// موديلات بذاكرة 8GB (تُستبعد لو الجهاز 6GB أو أقل)
+const EIGHT_GB = new Set(['iPhone 15 Pro','iPhone 15 Pro Max','iPhone 16','iPhone 16 Pro','iPhone 16 Plus','iPhone 16 Pro Max','iPhone 17','iPhone Air','iPhone 17 Pro','iPhone 17 Pro Max']);
+// بصمة مودم البيسباند -> جيل الآيفون (مستخرجة من ملفات تحليلات حقيقية)
+const BASEBAND_GEN = { 'mav21':13 };   // iPhone 13 (Snapdragon X60)
+function modelGen(name){ const m=/iPhone (\d+)/.exec(name||''); if(m) return +m[1]; if(/iPhone Air/.test(name||'')) return 17; return 99; }
+// تحديد ذكي: يعتمد على سعة القياس + بصمات العتاد (بيسباند/ذاكرة) لحسم التشابه بين الأجيال
+function guessModelSmart(cap, meta){
+  meta = meta||{};
+  const gen = BASEBAND_GEN[meta.baseband] || null;         // جيل مؤكد من البيسباند
+  const excl8 = (meta.dram && meta.dram < 7);              // 6GB أو أقل => استبعاد موديلات 8GB
+  if(!cap) return {name:null, spec: gen? cycleSpecFor('iPhone '+gen):1000};
+  let best=null, diff=1e9;
+  for(const [n,c] of MODELS){
+    if(gen && modelGen(n)!==gen) continue;                 // قيّد بالجيل المؤكد
+    if(!gen && excl8 && EIGHT_GB.has(n)) continue;         // استبعاد 8GB لو مفيش جيل مؤكد
+    const dd=Math.abs(c-cap); if(dd<diff){diff=dd; best=n;}
+  }
+  if(best===null) return {name:null, spec:1000};
+  return { name:(diff<=110?best:null), spec:cycleSpecFor(best) };
+}
 function guessModel(designCap){
   if(!designCap) return {name:null,spec:1000};
   let best=null,diff=1e9;
@@ -335,6 +356,7 @@ function analyze(text){
     os: header?.os_version||meta?.os_version||"غير معروف",
     build:(header?.os_version||"").match(/\(([^)]+)\)/)?.[1]||"",
     storage: meta?.deviceCapacity, carrier: meta?.homeCarrierName, region: meta?.market,
+    baseband: meta?.basebandChipset, wifi: meta?.WiFiChipset, dram: +(meta?.dramSize)||0,
     date:(header?.timestamp||"").slice(0,10)||new Date().toISOString().slice(0,10),
     cycles:F.CycleCount, capPct:F.MaximumCapacityPercent,
     fcc:F.NominalChargeCapacity, design:F.AppleRawMaxCapacity,
@@ -356,11 +378,11 @@ function render(d){
   document.getElementById('reportView').classList.remove('hidden');
   document.getElementById('repDate').textContent=d.date;
 
-  // سعة التصميم الأصلية = FCC ÷ (نسبة السعة/100) — أدق من AppleRawMaxCapacity المتدهور
-  let design;
-  if(!N(d.fcc) && !N(d.capPct) && d.capPct>0) design = Math.round(d.fcc/(d.capPct/100));
-  else design = d.design || d.maxFcc;
-  const g = guessModel(design);
+  // سعة القياس الفعلية (أعلى سعة مسجّلة ≈ التصميم) — نتجنّب معادلة FCC÷النسبة لأنها غير دقيقة
+  const measured = d.design || d.maxFcc || d.fcc || 0;   // AppleRawMaxCapacity ثم MaximumFCC
+  const g = guessModelSmart(measured, {baseband:d.baseband, dram:d.dram, wifi:d.wifi});
+  // السعة التصميمية القياسية للموديل المُتعرَّف عليه (وإلا القيمة المقيسة)
+  const design = g.name ? MODELS_MAP[g.name] : measured;
   const spec = g.spec;
 
   // ---- status logic ----
@@ -385,15 +407,18 @@ function render(d){
   document.getElementById('deviceStrip').innerHTML=`
     <div class="card"><div class="k">الجهاز (تقديري)</div><div class="v" style="font-size:16px">${g.name||'غير محدد'}</div><div class="sub">${design?('سعة تصميم '+design+'mAh'):'—'}</div></div>
     <div class="card"><div class="k">نظام التشغيل</div><div class="v" style="font-size:16px">${d.os.replace('iPhone OS','iOS')}</div><div class="sub">${d.build?('Build '+d.build):''}</div></div>
-    <div class="card"><div class="k">السعة / الشبكة</div><div class="v" style="font-size:16px">${d.storage?d.storage+' GB':'—'}</div><div class="sub">${[d.carrier,d.region].filter(Boolean).join(' · ')||'—'}</div></div>`;
+    <div class="card"><div class="k">السعة التخزينية</div><div class="v" style="font-size:16px">${d.storage?d.storage+' GB':'—'}</div><div class="sub">مساحة التخزين</div></div>`;
+
+  // السعة الحالية الفعلية = سعة التصميم × نسبة الصحة (منطقية: أقل من التصميم)
+  const curCap = (design && !N(d.capPct)) ? Math.round(design * d.capPct/100) : null;
 
   // ---- metric grid ----
   const mc=(k,v,cls,sub,unit)=>`<div class="card"><div class="k">${k}</div><div class="v ${v===undefined||v===null?'na':cls}">${(v===undefined||v===null)?'غير متاح':v}${unit&&v!=null?`<span class="u">${unit}</span>`:''}</div><div class="sub">${sub}</div></div>`;
   document.getElementById('metricGrid').innerHTML=
     mc('عدد دورات الشحن', d.cycles, cycHigh?'bad':'', `الحد التصميمي: ${spec} دورة`)+
     mc('السعة القصوى', d.capPct, capBad?'bad':(status==='warn'?'warn':'good'), 'Maximum Capacity','%')+
-    mc('السعة الحالية الفعلية', d.fcc, 'warn', 'Nominal Charge Capacity','mAh')+
-    mc('سعة التصميم الأصلية', design, '', 'محسوبة: FCC ÷ السعة%','mAh')+
+    mc('السعة الحالية الفعلية', curCap, 'warn', 'التصميم × نسبة الصحة','mAh')+
+    mc('سعة التصميم الأصلية', design, '', g.name?('قياسية لـ '+g.name):'تقديرية','mAh')+
     mc('أقصى تيار شحن', d.maxCurrent, 'good', d.maxCurrent?('≈ '+(d.maxCurrent/1000).toFixed(1)+'A'):'—','mA')+
     mc('مؤشر صحة النظام', d.health, '', 'Battery Health Metric');
 
@@ -412,7 +437,7 @@ function render(d){
 
   charts.cap=new Chart(capChart,{type:'bar',
     data:{labels:['التصميم','الحالية','أعلى Qmax','أدنى FCC'],
-      datasets:[{data:[design||0,d.fcc||0,d.qmax||0,d.minFcc||0],backgroundColor:['#3a4150',WARN,GOOD,BAD],borderRadius:6,barThickness:34}]},
+      datasets:[{data:[design||0,curCap||0,d.qmax||0,d.minFcc||0],backgroundColor:['#3a4150',WARN,GOOD,BAD],borderRadius:6,barThickness:34}]},
     options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+' mAh'}}},
       scales:{y:{grid:{color:LINE},beginAtZero:true},x:{grid:{display:false}}}}});
 
