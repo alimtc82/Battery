@@ -503,6 +503,13 @@ function render(d){
   document.getElementById('recTitle').textContent=recTitle;
   document.getElementById('recList').innerHTML=recList.map(x=>`<li>${x}</li>`).join('');
 
+  // سياق ملخص الـ PDF (صفحة واحدة فاتحة)
+  window.PDFCTX = { date:d.date, model:(g.name||'غير محدد'),
+    os:(d.os||'').replace('iPhone OS','iOS'), storage:d.storage,
+    status, title, desc, capPct:(N(d.capPct)?null:d.capPct),
+    design, curCap, cycles:(N(d.cycles)?null:d.cycles), spec,
+    maxCurrent:d.maxCurrent, health:d.health, recTitle, recList };
+
   window.scrollTo(0,0);
 }
 
@@ -525,47 +532,63 @@ function setChartsTheme(light){
 }
 
 // فرض ثيم فاتح مباشرة على العناصر الحية (html2canvas يقرأها بثقة)، مع دالة إرجاع
-function applyLightLive(root){
-  const touched=[];
-  const set=(el,styles)=>{ touched.push([el, el.getAttribute('style')]); Object.assign(el.style, styles); };
-  set(root,{background:'#ffffff',color:'#1a1d22',backgroundImage:'none'});
-  root.querySelectorAll('.card,.verdict,.panel,.ind').forEach(c=>set(c,{background:'#ffffff',borderColor:'#e3e5ea',boxShadow:'none'}));
-  root.querySelectorAll('.rec').forEach(c=>set(c,{background:'#fbf6ea',borderColor:'#eadfc2',backgroundImage:'none'}));
-  root.querySelectorAll('.k,.sub,.l,.doc-meta,.tool-name').forEach(t=>set(t,{color:'#586072'}));
-  root.querySelectorAll('.brand span,.rec li').forEach(t=>set(t,{color:'#3a3f48'}));
-  root.querySelectorAll('.v').forEach(v=>{
-    let col='#1a1d22';
-    if(v.classList.contains('good')) col='#12946a';
-    else if(v.classList.contains('warn')) col='#b5790a';
-    else if(v.classList.contains('bad')) col='#d83a3f';
-    else if(v.classList.contains('na')) col='#8a92a0';
-    set(v,{color:col});
-  });
-  root.querySelectorAll('h2.sec').forEach(h=>set(h,{color:'#b5790a'}));
-  root.querySelectorAll('header').forEach(h=>set(h,{borderColor:'#e3e5ea'}));
-  return ()=>{ touched.forEach(([el,css])=>{ if(css===null) el.removeAttribute('style'); else el.setAttribute('style',css); }); };
+function buildPdfSummary(){
+  const c = window.PDFCTX; if(!c) return;
+  const S = { good:{bg:'#e7f7f0',bd:'#b8e6d3',fg:'#12946a'}, warn:{bg:'#fdf6e3',bd:'#f0e0b0',fg:'#b5790a'}, bad:{bg:'#fdecec',bd:'#f5c2c2',fg:'#d83a3f'} }[c.status] || {bg:'#f4f5f7',bd:'#e3e5ea',fg:'#1a1d22'};
+  let logoSrc='';
+  try{ const le=document.querySelector('.mtc-logo-img'); if(le){ const bg=getComputedStyle(le).backgroundImage; const m=/url\(["']?(.+?)["']?\)/.exec(bg); if(m) logoSrc=m[1]; } }catch(e){}
+  const na=(v)=> (v===undefined||v===null||v==='')?'—':v;
+  const metric=(label,val,sub,color)=>`<div style="background:#f7f8fa;border:1px solid #e6e8ec;border-radius:10px;padding:12px 8px;text-align:center">`+
+    `<div style="font-size:11px;color:#6b7280;margin-bottom:5px">${label}</div>`+
+    `<div style="font-size:21px;font-weight:800;color:${color||'#1a1d22'};line-height:1">${na(val)}</div>`+
+    `<div style="font-size:10px;color:#9aa1ab;margin-top:4px">${sub||''}</div></div>`;
+  const cycHigh = (c.cycles!=null && c.spec && c.cycles>=c.spec);
+  const html =
+    `<div style="display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #e3a008;padding-bottom:14px;margin-bottom:16px">`+
+      `<div><div style="font-size:20px;font-weight:800;color:#1a1d22">تقرير تشخيص حالة البطارية</div>`+
+      `<div style="font-size:12px;color:#6b7280;margin-top:3px">التاريخ: ${na(c.date)}</div></div>`+
+      (logoSrc ? `<img src="${logoSrc}" style="width:120px;height:46px;object-fit:contain">` : `<div style="font-size:22px;font-weight:900;color:#b5790a;letter-spacing:1px">MTC GROUP</div>`)+
+    `</div>`+
+    `<div style="font-size:13px;color:#374151;margin-bottom:16px;font-weight:600">📱 ${na(c.model)} · ${na(c.os)} · ${c.storage?c.storage+'GB':'—'}</div>`+
+    `<div style="background:${S.bg};border:1px solid ${S.bd};border-radius:14px;padding:16px 18px;margin-bottom:18px;display:flex;align-items:center;gap:18px">`+
+      `<div style="font-size:38px;font-weight:900;color:${S.fg};line-height:1">${c.capPct!=null?c.capPct+'%':'—'}</div>`+
+      `<div style="flex:1"><div style="font-size:17px;font-weight:800;color:${S.fg};margin-bottom:3px">${na(c.title)}</div>`+
+      `<div style="font-size:12px;color:#4b5563">${na(c.desc)}</div></div></div>`+
+    `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px">`+
+      metric('سعة التصميم', c.design?c.design+' mAh':'—', c.model?('قياسية لـ '+c.model):'') +
+      metric('السعة الحالية', c.curCap?c.curCap+' mAh':'—', 'التصميم × الصحة') +
+      metric('السعة القصوى', c.capPct!=null?c.capPct+'%':'—', 'Maximum Capacity', S.fg) +
+      metric('دورات الشحن', c.cycles!=null?c.cycles:'—', 'الحد: '+na(c.spec)+' دورة', cycHigh?'#d83a3f':'#1a1d22') +
+      metric('الحد التصميمي', c.spec?c.spec+' دورة':'—', 'سبيك Apple') +
+      metric('أقصى تيار شحن', c.maxCurrent?c.maxCurrent+' mA':'—', c.maxCurrent?('≈ '+(c.maxCurrent/1000).toFixed(1)+'A'):'') +
+    `</div>`+
+    `<div style="background:#fbf6ea;border:1px solid #eadfc2;border-radius:12px;padding:14px 18px;margin-bottom:16px">`+
+      `<div style="font-size:15px;font-weight:800;color:#b5790a;margin-bottom:8px">${na(c.recTitle)}</div>`+
+      `<ul style="list-style:none;padding:0;margin:0">`+ (c.recList||[]).map(x=>`<li style="font-size:12.5px;color:#3a3f48;padding:4px 0 4px 0;padding-inline-start:16px;position:relative"><span style="position:absolute;right:0;color:#b5790a">◂</span>${x}</li>`).join('') +`</ul>`+
+    `</div>`+
+    `<div style="border-top:1px solid #e6e8ec;padding-top:12px;font-size:11px;color:#9aa1ab;text-align:center">صادر عن MTC GROUP — بنها، مصر · mtc-group.online</div>`;
+  document.getElementById('pdfSummary').innerHTML = html;
 }
 
 document.getElementById('pdfBtn').onclick=function(){
-  const el=document.getElementById('reportContent');
-  const hl=document.querySelector('.home-link');
   const btn=this;
-  const opt={margin:[8,8,8,8],filename:'battery-report-'+(document.getElementById('repDate').textContent||'')+'.pdf',
+  if(!window.PDFCTX){ alert('حلّل ملفًا أولاً'); return; }
+  buildPdfSummary();
+  const el=document.getElementById('pdfSummary');
+  const opt={margin:0,filename:'battery-report-'+(window.PDFCTX.date||'')+'.pdf',
     image:{type:'jpeg',quality:.98},
-    html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true,windowWidth:900,scrollX:0,scrollY:0},
-    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-    pagebreak:{mode:['css','legacy'],avoid:['.card','.verdict','.panel','.rec','canvas','header']}};
+    html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true,windowWidth:820,scrollX:0,scrollY:0},
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
+  const done=()=>{ el.style.left='-10000px'; el.style.zIndex=''; btn.textContent='⬇︎ تصدير PDF'; };
   if(window.html2pdf){
     btn.textContent='… جاري التصدير';
-    if(hl) hl.style.display='none';
-    const revert=applyLightLive(el);        // تحويل مباشر لفاتح
-    setChartsTheme(true);
-    const done=()=>{ revert(); setChartsTheme(false); if(hl) hl.style.display=''; btn.textContent='⬇︎ تصدير PDF'; };
-    setTimeout(()=>{
-      html2pdf().set(opt).from(el).save().then(done).catch(()=>{done();window.print();});
-    }, 180);
+    el.style.left='0'; el.style.zIndex='-1';       // على الشاشة خلف المحتوى للحظة الالتقاط
+    setTimeout(()=>{ html2pdf().set(opt).from(el).save().then(done).catch(()=>{done();window.print();}); }, 300);
   } else { window.print(); }
 };
 </script>
+<!-- ===== PDF ONE-PAGE SUMMARY (light, built explicitly) ===== -->
+<div id="pdfSummary" dir="rtl" style="position:fixed;left:-10000px;top:0;width:760px;background:#ffffff;color:#1a1d22;font-family:'Cairo',sans-serif;padding:30px;box-sizing:border-box"></div>
+
 </body>
 </html>
