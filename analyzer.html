@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   :root{
     --bg:#0d0f14; --panel:#161a22; --panel2:#1d222c; --line:#282e3a;
@@ -184,7 +184,7 @@
 <!-- ================= REPORT ================= -->
 <div id="reportView" class="hidden">
   <div class="toolbar">
-    <button class="btn primary" id="pdfBtn">⬇︎ تصدير PDF</button>
+    <button class="btn primary" id="pdfBtn">🖼️ حفظ صورة التقرير</button>
     <button class="btn" id="newBtn">↻ تحليل ملف جديد</button>
   </div>
 
@@ -570,29 +570,50 @@ function buildPdfSummary(){
   document.getElementById('pdfSummary').innerHTML = html;
 }
 
-document.getElementById('pdfBtn').onclick=function(){
+document.getElementById('pdfBtn').onclick=async function(){
   const btn=this;
-  if(!window.PDFCTX){ alert('حلّل ملفًا أولاً'); return; }
-  buildPdfSummary();
-  const el=document.getElementById('pdfSummary');
-  if(!el.innerHTML.trim()){ alert('تعذّر إنشاء الملخص — أعد المحاولة'); return; }
-  const opt={margin:6,filename:'battery-report-'+(window.PDFCTX.date||'')+'.pdf',
-    image:{type:'jpeg',quality:.98},
-    html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true,windowWidth:820},
-    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
-  const done=()=>{ el.style.display='none'; btn.textContent='⬇︎ تصدير PDF'; };
-  if(window.html2pdf){
-    btn.textContent='… جاري التصدير';
-    el.style.display='block';                       // عنصر عادي ظاهر (html2canvas يلتقطه بثقة)
-    el.scrollIntoView({block:'center'});
-    setTimeout(()=>{
-      html2pdf().set(opt).from(el).save().then(done).catch((e)=>{ done(); alert('خطأ في التصدير: '+(e&&e.message||e)); });
-    }, 400);
-  } else { window.print(); }
-};
+  const target=document.getElementById('reportContent');
+  if(!target){ return; }
+  if(typeof html2canvas==='undefined'){ alert('مكتبة الصور لم تُحمّل — تحقق من الاتصال بالإنترنت'); return; }
+  const hl=document.querySelector('.home-link');
+  btn.textContent='… جاري إنشاء الصورة';
+  if(hl) hl.style.display='none';
+  // تحويل التقرير للفاتح مباشرة قبل التصوير (اختياري لكن أنظف)
+  const revert = (typeof applyLightLive==='function') ? applyLightLive(target) : (()=>{});
+  if(typeof setChartsTheme==='function') setChartsTheme(true);
+  try{
+    await new Promise(r=>setTimeout(r,350));
+    const canvas=await html2canvas(target,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false,windowWidth:900});
+    revert(); if(typeof setChartsTheme==='function') setChartsTheme(false); if(hl) hl.style.display='';
+    const url=canvas.toDataURL('image/png');
+    // عرض الصورة في overlay للحفظ/المشاركة (الأضمن على iOS)
+    document.getElementById('imgResult').src=url;
+    const waText=encodeURIComponent('تقرير تشخيص حالة البطارية — MTC GROUP');
+    document.getElementById('imgShare').href='https://wa.me/?text='+waText;
+    document.getElementById('imgOverlay').style.display='block';
+    // محاولة تنزيل مباشر (للكمبيوتر)
+    try{ const A=document.createElement('a'); A.href=url; A.download='battery-report-'+((window.PDFCTX&&window.PDFCTX.date)||'')+'.png'; document.body.appendChild(A); A.click(); A.remove(); }catch(e){}
+    btn.textContent='🖼️ حفظ صورة التقرير';
+  }catch(err){
+    revert(); if(typeof setChartsTheme==='function') setChartsTheme(false); if(hl) hl.style.display='';
+    btn.textContent='🖼️ حفظ صورة التقرير';
+    alert('تعذّر إنشاء الصورة: '+((err&&err.message)||err));
+  }
+}
+document.getElementById('imgClose').onclick=function(){ document.getElementById('imgOverlay').style.display='none'; };
 </script>
 <!-- ===== PDF ONE-PAGE SUMMARY (light, built explicitly) ===== -->
 <div id="pdfSummary" dir="rtl" style="display:none;width:760px;max-width:100%;margin:0 auto;background:#ffffff;color:#1a1d22;font-family:'Cairo',sans-serif;padding:30px;box-sizing:border-box"></div>
+
+<!-- ===== IMAGE PREVIEW OVERLAY ===== -->
+<div id="imgOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:2147483647;overflow:auto;padding:14px;text-align:center">
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:12px;position:sticky;top:0">
+    <button id="imgClose" style="background:#e63946;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-family:'Cairo',sans-serif;font-weight:800;font-size:14px">✕ إغلاق</button>
+    <a id="imgShare" href="#" style="background:#25D366;color:#fff;border-radius:10px;padding:10px 18px;font-family:'Cairo',sans-serif;font-weight:800;font-size:14px;text-decoration:none">📲 مشاركة واتساب</a>
+  </div>
+  <div style="color:#ffd24a;font-family:'Cairo',sans-serif;font-size:13px;margin-bottom:10px">اضغط مطوّلاً على الصورة ← «حفظ الصورة» أو «مشاركة»</div>
+  <img id="imgResult" style="max-width:100%;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.5)">
+</div>
 
 </body>
 </html>
