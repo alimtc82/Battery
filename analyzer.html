@@ -575,20 +575,24 @@ document.getElementById('pdfBtn').onclick=function(){
   if(!window.PDFCTX){ alert('حلّل ملفًا أولاً'); return; }
   buildPdfSummary();
   const el=document.getElementById('pdfSummary');
-  const opt={margin:0,filename:'battery-report-'+(window.PDFCTX.date||'')+'.pdf',
+  if(!el.innerHTML.trim()){ alert('تعذّر إنشاء الملخص — أعد المحاولة'); return; }
+  const opt={margin:6,filename:'battery-report-'+(window.PDFCTX.date||'')+'.pdf',
     image:{type:'jpeg',quality:.98},
-    html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true,windowWidth:820,scrollX:0,scrollY:0},
+    html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true,windowWidth:820},
     jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
-  const done=()=>{ el.style.left='-10000px'; el.style.zIndex=''; btn.textContent='⬇︎ تصدير PDF'; };
+  const done=()=>{ el.style.display='none'; btn.textContent='⬇︎ تصدير PDF'; };
   if(window.html2pdf){
     btn.textContent='… جاري التصدير';
-    el.style.left='0'; el.style.zIndex='-1';       // على الشاشة خلف المحتوى للحظة الالتقاط
-    setTimeout(()=>{ html2pdf().set(opt).from(el).save().then(done).catch(()=>{done();window.print();}); }, 300);
+    el.style.display='block';                       // عنصر عادي ظاهر (html2canvas يلتقطه بثقة)
+    el.scrollIntoView({block:'center'});
+    setTimeout(()=>{
+      html2pdf().set(opt).from(el).save().then(done).catch((e)=>{ done(); alert('خطأ في التصدير: '+(e&&e.message||e)); });
+    }, 400);
   } else { window.print(); }
 };
 </script>
 <!-- ===== PDF ONE-PAGE SUMMARY (light, built explicitly) ===== -->
-<div id="pdfSummary" dir="rtl" style="position:fixed;left:-10000px;top:0;width:760px;background:#ffffff;color:#1a1d22;font-family:'Cairo',sans-serif;padding:30px;box-sizing:border-box"></div>
+<div id="pdfSummary" dir="rtl" style="display:none;width:760px;max-width:100%;margin:0 auto;background:#ffffff;color:#1a1d22;font-family:'Cairo',sans-serif;padding:30px;box-sizing:border-box"></div>
 
 </body>
 </html>
