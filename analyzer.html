@@ -134,6 +134,16 @@
   .mtc-logo-img.sm{width:104px;height:40px}
   .tool-name{font-size:14px;color:var(--muted);font-weight:700}
   .card,.verdict,.panel,.rec,header{break-inside:avoid;page-break-inside:avoid}
+  /* ===== PDF LIGHT MODE ===== */
+  .pdf-mode{
+    --bg:#ffffff; --panel:#ffffff; --panel2:#f4f5f7; --line:#e3e5ea;
+    --ink:#1a1d22; --muted:#586072;
+    --amber:#b5790a; --warn:#b5790a; --good:#12946a; --bad:#d83a3f;
+    background:#ffffff!important; background-image:none!important; color:#1a1d22!important;
+  }
+  .pdf-mode .card,.pdf-mode .verdict,.pdf-mode .panel,.pdf-mode .ind{background:#ffffff!important;border:1px solid #e3e5ea!important;box-shadow:none!important}
+  .pdf-mode header{border-color:#e3e5ea!important}
+  .pdf-mode .tool-name,.pdf-mode .brand span,.pdf-mode .doc-meta{color:#586072!important}
 </style>
 
 </head>
@@ -497,17 +507,41 @@ function render(d){
 }
 
 // ===== PDF export =====
+function setChartsTheme(light){
+  const txt = light ? '#2a2d33' : '#8b93a2';
+  const grid = light ? '#e3e5ea' : LINE;
+  Object.values(charts).forEach(ch=>{
+    if(!ch||!ch.options) return;
+    const s=ch.options.scales;
+    if(s){ for(const k in s){ const ax=s[k]; if(!ax) continue;
+      ax.ticks=Object.assign(ax.ticks||{},{color:txt});
+      ax.grid=Object.assign(ax.grid||{},{color:grid});
+      if(ax.title) ax.title.color=txt;
+    }}
+    const lg=ch.options.plugins&&ch.options.plugins.legend;
+    if(lg&&lg.display!==false){ lg.labels=Object.assign(lg.labels||{},{color:txt}); }
+    try{ ch.update('none'); }catch(e){}
+  });
+}
+
 document.getElementById('pdfBtn').onclick=function(){
   const el=document.getElementById('reportContent');
+  const hl=document.querySelector('.home-link');
+  const btn=this;
   const opt={margin:[8,8,8,8],filename:'battery-report-'+(document.getElementById('repDate').textContent||'')+'.pdf',
-    image:{type:'jpeg',quality:.96},
-    html2canvas:{scale:2,backgroundColor:'#0d0f14',useCORS:true,windowWidth:900,scrollX:0,scrollY:0},
+    image:{type:'jpeg',quality:.98},
+    html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true,windowWidth:900,scrollX:0,scrollY:0},
     jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
     pagebreak:{mode:['css','legacy'],avoid:['.card','.verdict','.panel','.rec','canvas','header']}};
+  const restore=()=>{ el.classList.remove('pdf-mode'); setChartsTheme(false); if(hl) hl.style.display=''; btn.textContent='⬇︎ تصدير PDF'; };
   if(window.html2pdf){
-    this.textContent='… جاري التصدير';
-    html2pdf().set(opt).from(el).save().then(()=>{this.textContent='⬇︎ تصدير PDF';})
-      .catch(()=>{this.textContent='⬇︎ تصدير PDF';window.print();});
+    btn.textContent='… جاري التصدير';
+    if(hl) hl.style.display='none';        // إخفاء زر الرجوع من الـ PDF
+    el.classList.add('pdf-mode');          // خلفية بيضاء وكروت فاتحة
+    setChartsTheme(true);                   // ألوان الرسوم للفاتح
+    setTimeout(()=>{
+      html2pdf().set(opt).from(el).save().then(restore).catch(()=>{restore();window.print();});
+    }, 150);
   } else { window.print(); }
 };
 </script>
