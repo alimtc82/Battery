@@ -524,21 +524,41 @@ function setChartsTheme(light){
   });
 }
 
+// فرض ثيم فاتح على النسخة المصوّرة (inline styles مضمونة مع html2canvas)
+function paintLight(doc){
+  const root=doc.getElementById('reportContent'); if(!root) return;
+  root.style.background='#ffffff'; root.style.color='#1a1d22';
+  root.querySelectorAll('.card,.verdict,.panel,.ind').forEach(c=>{
+    c.style.background='#ffffff'; c.style.borderColor='#e3e5ea'; c.style.boxShadow='none';
+  });
+  root.querySelectorAll('.rec').forEach(c=>{ c.style.background='#fbf6ea'; c.style.borderColor='#eadfc2'; });
+  root.querySelectorAll('.k,.sub,.l,.doc-meta,.tool-name').forEach(t=>t.style.color='#586072');
+  root.querySelectorAll('.brand span,.rec li').forEach(t=>t.style.color='#3a3f48');
+  root.querySelectorAll('.v').forEach(v=>{
+    if(v.classList.contains('good')) v.style.color='#12946a';
+    else if(v.classList.contains('warn')) v.style.color='#b5790a';
+    else if(v.classList.contains('bad')) v.style.color='#d83a3f';
+    else if(v.classList.contains('na')) v.style.color='#8a92a0';
+    else v.style.color='#1a1d22';
+  });
+  root.querySelectorAll('h2.sec').forEach(h=>h.style.color='#b5790a');
+  root.querySelectorAll('header, header *').forEach(h=>{ if(getComputedStyle(h).borderBottomWidth!=='0px') h.style.borderColor='#e3e5ea'; });
+}
+
 document.getElementById('pdfBtn').onclick=function(){
   const el=document.getElementById('reportContent');
   const hl=document.querySelector('.home-link');
   const btn=this;
   const opt={margin:[8,8,8,8],filename:'battery-report-'+(document.getElementById('repDate').textContent||'')+'.pdf',
     image:{type:'jpeg',quality:.98},
-    html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true,windowWidth:900,scrollX:0,scrollY:0},
+    html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true,windowWidth:900,scrollX:0,scrollY:0,onclone:(doc)=>paintLight(doc)},
     jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
     pagebreak:{mode:['css','legacy'],avoid:['.card','.verdict','.panel','.rec','canvas','header']}};
-  const restore=()=>{ el.classList.remove('pdf-mode'); setChartsTheme(false); if(hl) hl.style.display=''; btn.textContent='⬇︎ تصدير PDF'; };
+  const restore=()=>{ setChartsTheme(false); if(hl) hl.style.display=''; btn.textContent='⬇︎ تصدير PDF'; };
   if(window.html2pdf){
     btn.textContent='… جاري التصدير';
     if(hl) hl.style.display='none';        // إخفاء زر الرجوع من الـ PDF
-    el.classList.add('pdf-mode');          // خلفية بيضاء وكروت فاتحة
-    setChartsTheme(true);                   // ألوان الرسوم للفاتح
+    setChartsTheme(true);                   // ألوان الرسوم للفاتح (على الكانفس الحي)
     setTimeout(()=>{
       html2pdf().set(opt).from(el).save().then(restore).catch(()=>{restore();window.print();});
     }, 150);
